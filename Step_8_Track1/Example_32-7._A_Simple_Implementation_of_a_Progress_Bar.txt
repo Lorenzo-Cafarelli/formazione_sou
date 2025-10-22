@@ -1,0 +1,35 @@
+#! /bin/bash
+# progress-bar2.sh
+# Author: Graham Ewart (with reformatting by ABS Guide author).
+# Used in ABS Guide with permission (thanks!).
+ 
+# Invoke this script with bash. It doesn't work with sh.
+ 
+interval=1			#ogni punto della barra viene stampato ogni secondo
+long_interval=10		#La simulazione durerà 10 secondi
+ 
+{			#Significa che viene eseguito in background
+     trap "exit" SIGUSR1				#Appena riceve il segnale SIDUSR1 la barra si ferma
+     sleep $interval; sleep $interval			#Fa due pause iniziali all’inizio prima di sincronizzare con il processo principale
+     while true
+     do
+       echo -n '.'     # Use dots.
+       sleep $interval
+     done; 			#Ciclo infinito che ogni secondo stampa un puntino 
+} &         
+ 
+pid=$!			#Variabile che contiene il Process ID dell’ultimo processo
+trap "echo !; kill -USR1 $pid; wait $pid"  EXIT 		#Azione da eseguire quando lo script termina       # To handle ^C.
+ 
+echo -n 'Long-running process '
+sleep $long_interval
+echo ' Finished!'
+					#Simula un processo che dura 10 secondi  
+
+
+kill -USR1 $pid			#Invia SIGURS1 per assicurarsi che si ferma
+wait $					#Attende che il processo termini
+trap EXIT				#Rimuove la trap per evitare conflitti
+
+exit $?					#Esce restituendo l’exit code
+

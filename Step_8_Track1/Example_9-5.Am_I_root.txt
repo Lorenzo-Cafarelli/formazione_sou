@@ -1,0 +1,32 @@
+#!/bin/bash			#Indica che viene interpretato da Bash
+# am-i-root.sh:   Am I root or not?		#Scopo del file ossia scoprire se chi lo esegue è root oppure no
+ 
+ROOT_UID=0   # Root has $UID 0.			#Viene definita la variabile da riutilizzare nel codice
+ 
+if [ "$UID" -eq "$ROOT_UID" ]  # Will the real "root" please stand up?
+then
+  echo "You are root."
+else
+  echo "You are just an ordinary user (but mom loves you just the same)."
+fi
+			#Struttura If, nella prima riga viene controllato se l’UID corrente è uguale a 0 (ossia la variabile che abbiamo chiamato prima. Se si stampa “You are root”, se non è uguale a 0 stampa "You are just an ordinary user (but mom loves you just the same)."
+exit 0
+		#Esce con codice 0, ossia “tutto ok” tutto ciò che c’è dopo non verrà eseguito
+# ============================================================= #
+# Code below will not execute, because the script already exited.
+ 
+# An alternate method of getting to the root of matters:
+
+#Ricorda che non verrà eseguito nulla ma ci sta scritto un modo alternativo per avere lo stesso risultato
+
+ROOTUSER_NAME=root		#Viene definita una variabile con il nome dell’utente root			
+ 
+username=`id -nu`              # Or...   username=`whoami`			#Viene definita una variabile con all’interno il nome utente associato all’UID corrente
+if [ "$username" = "$ROOTUSER_NAME" ]
+then
+  echo "Rooty, toot, toot. You are root."
+else
+  echo "You are just a regular fella."
+fi
+
+#Sempre struttura di If, in cui la condizione è verificare se le due variabili che abbiamo creato prima coincidono e nel caso fosse corretto stampa il primo messaggio senno stampa il secondo messaggio 

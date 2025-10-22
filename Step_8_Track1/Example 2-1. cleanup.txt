@@ -1,0 +1,7 @@
+# Cleanup
+# Run as root, of course. (Lo script deve essere eseguito come utente root)
+ 
+cd /var/log    #Sposta la shell dentro a /var/log
+cat /dev/null > messages    #Con cat viene prodotto un output vuoto e poi con il simbolo ">" viene reindirizzato in un file chiamato "messages"
+cat /dev/null > wtmp    #Viene fatta la stessa cosa della riga sopra però il file finale si chiamerà "wtmp"
+echo "Log files cleaned up."    #Viene stampato il messaggio "Log files cleaned up."

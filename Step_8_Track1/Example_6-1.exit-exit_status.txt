@@ -1,0 +1,19 @@
+#!/bin/bash			#Eseguito con l’interprete Bash
+ 
+echo hello			#Stampa Hello
+echo $?    # Exit status 0 returned because command executed successfully.
+			#Visualizza l’uscita dell’ultimo comando, in questo caso 0 
+
+lskdf      # Unrecognized command.
+echo $?    # Non-zero exit status returned -- command failed to execute.
+			#In questo caso stamperà 127 o un numero diverso da 0 per indicare che il comando è fallito perché è inesistente 
+			
+echo			#Stampa riga vuota
+ 
+exit 113   # Will return 113 to shell.		#Termina lo script e restituisce 113 	
+           # To verify this, type "echo $?" after script terminates.
+ 
+#  By convention, an 'exit 0' indicates success,
+#+ while a non-zero exit value means an error or anomalous condition.
+#  See the "Exit Codes With Special Meanings" appendix.
+

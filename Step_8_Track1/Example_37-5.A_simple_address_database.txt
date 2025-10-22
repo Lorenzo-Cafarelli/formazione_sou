@@ -1,0 +1,25 @@
+#!/bin/bash4				#Interprete Bash4 per usare array associativi
+# fetch_address.sh
+ 
+declare -A address
+#       -A option declares associative array.
+ 			#-A address, serve a dire che i valori che indicizzi saranno stringhe 
+address[Charles]="414 W. 10th Ave., Baltimore, MD 21236"
+address[John]="202 E. 3rd St., New York, NY 10009"
+address[Wilma]="1854 Vermont Ave, Los Angeles, CA 90023"
+ 
+			#Assegni tre elementi all’array Address con 3 chiavi diverse
+ 
+echo "Charles's address is ${address[Charles]}."
+# Charles's address is 414 W. 10th Ave., Baltimore, MD 21236.
+echo "Wilma's address is ${address[Wilma]}."
+# Wilma's address is 1854 Vermont Ave, Los Angeles, CA 90023.
+echo "John's address is ${address[John]}."
+# John's address is 202 E. 3rd St., New York, NY 10009.
+			#Stampi I 3 address con i valori definiti prima
+ 
+echo
+ 
+echo "${!address[*]}"   # The array indices ...
+# Charles John Wilma
+			#Stampi tutte le chiavi

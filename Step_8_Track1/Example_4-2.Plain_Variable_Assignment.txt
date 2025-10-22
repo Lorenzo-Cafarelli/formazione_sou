@@ -1,0 +1,39 @@
+#!/bin/bash			#Indica che viene interpretato da Bash
+# Naked variables
+
+echo			#Stampa riga vuota per leggere meglio l’output
+
+# When is a variable "naked", i.e., lacking the '$' in front?
+# When it is being assigned, rather than referenced.
+ 
+# Assignment
+a=879			#Assegnazione variabile
+echo "The value of \"a\" is $a."			#Stampa il messaggio con la variabile a
+ 
+# Assignment using 'let'
+let a=16+5			#utilizzo di let (comando di bash per fare operazioni), assegnazione del risultato 16+5 alla variabile a
+echo "The value of \"a\" is now $a."			#Stampa il messaggio con la variabile a
+ 
+echo			#Stampa roga vuota
+ 
+# In a 'for' loop (really, a type of disguised assignment):
+echo -n "Values of \"a\" in the loop are: "
+for a in 7 8 9 11
+do
+  echo -n "$a "
+done
+			#Viene creato un ciclo for in cui la variabile viene assegnata al valore successivo della lista e stampa i risultati in un unica riga.
+
+echo
+echo
+			#Stampa doppia riga vuota
+ 
+# In a 'read' statement (also a type of assignment):
+echo -n "Enter \"a\" "
+read a
+echo "The value of \"a\" is now $a."
+			#Con il comando read aspetta che l’utente digita qualcosa così lo assegna alla variabile a e poi stampa ciò che l’utente scrive
+	
+echo
+ 
+exit 0			#Aggiunge riga vuota e esce senza errori

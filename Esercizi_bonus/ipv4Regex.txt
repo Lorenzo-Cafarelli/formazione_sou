@@ -1,0 +1,20 @@
+#Scrivere una o piu' espressioni regolari (in OR) che matchino tutti i possibili indirizzi ipv4 in decimal dottet notation.
+
+
+#ifconfig = Mostra la configurazione delle interfacce di rete
+
+#Cerca all'interno del file le righe che contengono un punto
+
+ifconfig | grep "\."
+
+
+#Filtra solo le righe che contengono la parola "inet"
+
+ifconfig | grep "inet"
+  
+
+#Stesso funzionamento del primo ma con sintassi diversa
+
+ifconfig | grep -F "."
+
+

@@ -16,5 +16,3 @@ ifconfig | grep "inet"
 #Stesso funzionamento del primo ma con sintassi diversa
 
 ifconfig | grep -F "."
-
-

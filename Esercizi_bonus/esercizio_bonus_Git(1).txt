@@ -8,4 +8,29 @@ Step 3:
 Aggiungere e committare il file
 
 Step 4:
-Creare due branch 
+Creare due branch
+
+Step 5: 
+Dal branch A modificare il file, aggiungerlo e committarlo
+
+Step 6:
+Dal branch B modificare il file, aggiungerlo e committarlo
+
+Step 7:
+Fare il merge del branch A
+
+Step 8:
+Fare il merge del branch B
+
+Step 9:
+Riceveremo questo errore:
+"Merge automatico di Esercizi_bonus/conflitto.txt in corso
+CONFLITTO (contenuto): conflitto di merge in Esercizi_bonus/conflitto.txt
+Merge automatico fallito; risolvi i conflitti ed esegui il commit
+del risultato."
+
+Step 10:
+Risolvere il conflitto modificando il file manualmente decidendo quale parte tenere
+
+Step 11:
+Dopo aver salvato il file aggiungere il file risolto alla staging area e committarlo

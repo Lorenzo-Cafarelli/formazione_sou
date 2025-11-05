@@ -1,0 +1,11 @@
+Step 1:
+Trovarsi nel ramo di main
+
+Step 2: 
+Creare file dentro la repo
+
+Step 3:
+Aggiungere e committare il file
+
+Step 4:
+Creare due branch 

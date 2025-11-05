@@ -1,2 +1,2 @@
 Questo è il file originale.
-Contiene una linea di testo.
+MODIFICA DAL BRANCH B.

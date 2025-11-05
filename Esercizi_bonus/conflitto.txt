@@ -1,2 +1,3 @@
 Questo è il file originale.
 MODIFICA DAL BRANCH A.
+MODIFICA DAL BRANCH B.

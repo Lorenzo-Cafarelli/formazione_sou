@@ -1,0 +1,94 @@
+//Definisco la variabile DAY_OF_WEEK per ottenere il giorno della settimana corrente
+def DAY_OF_WEEK = new Date().getDay()
+
+//def DAY_OF_WEEK = 6 
+//Uso questa riga per testare il comportamento del pipeline
+//inserendo manualmente un valore per il giorno della settimana
+
+/*
+ * Valori di .getDay():
+ * 0 = Domenica
+ * 1 = Lunedì
+ * 2 = Martedì
+ * 3 = Mercoledì
+ * 4 = Giovedì
+ * 5 = Venerdì
+ * 6 = Sabato
+ */
+
+pipeline {
+
+
+    // Specifica dove Jenkins deve eseguire la pipeline.
+    // 'any' significa "usa qualsiasi nodo agente (executor) disponibile".
+    agent any
+
+    stages {
+        
+        stage('Build infrasettimanale') {
+            // Questo stage si attiva solo se la condizione 'when' è vera.
+            when {
+                // Controlliamo se il giorno è tra Lunedì (1) e Venerdì (5).
+                expression {
+                    return (DAY_OF_WEEK in 1..5)
+                }
+            }
+            steps {
+                script {
+                // Messaggio per confermare il giorno
+                // Struttura condizionale per stampare il giorno specifico e non il numero
+                if (DAY_OF_WEEK == 1) {
+                    echo "Oggi è Lunedì. È un giorno feriale."
+                } else if (DAY_OF_WEEK == 2) {
+                    echo "Oggi è Martedì. È un giorno feriale."
+                } else if (DAY_OF_WEEK == 3) {
+                    echo "Oggi è Mercoledì. È un giorno feriale."
+                } else if (DAY_OF_WEEK == 4) {
+                    echo "Oggi è Giovedì. È un giorno feriale."
+                } else if (DAY_OF_WEEK == 5) {
+                    echo "Oggi è Venerdì. È un giorno feriale."
+                }
+                echo "Avvio la build..."
+                // Qui andrebbe il codice effettivo della build
+                }
+            }
+        }
+
+        stage('Avviso Weekend') {
+            // Questo stage si attiva solo nel weekend.
+            when {
+                // Usiamo una lista [0, 6] per controllare se
+                // il giorno è Domenica (0) OPPURE Sabato (6).
+                expression {
+                    return (DAY_OF_WEEK in [0, 6])
+                }
+            }
+            steps {
+                // Stampa messaggio di avviso
+                script {
+                    if (DAY_OF_WEEK == 0) {
+                        echo "Oggi è Domenica. È weekend!"
+                    } else if (DAY_OF_WEEK == 6) {
+                        echo "Oggi è Sabato. È weekend!"
+                    }
+                echo "ATTENZIONE: Nessuna build verrà eseguita oggi."
+            }
+        }
+        }
+
+        //Serve solo se si vuole gestire un errore di giorno inesistente
+        //Quindi solo se è attivato manualmente un valore non valido per DAY_OF_WEEK
+
+        /*stage('Giorno inesittente') {
+            when {
+                expression {
+                    return !(DAY_OF_WEEK in 0..6)
+                }
+            }
+            steps {
+                echo "Errore: Il giorno della settimana non è valido."
+            }
+        }
+        */
+    }
+}

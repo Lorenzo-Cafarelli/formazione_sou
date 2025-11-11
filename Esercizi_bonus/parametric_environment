@@ -1,0 +1,48 @@
+pipeline {
+
+    // Specifica dove Jenkins deve eseguire la pipeline.
+    // 'any' significa "usa qualsiasi nodo agente (executor) disponibile".
+    agent any
+
+    // Questo blocco definisce i parametri che Jenkins chiederà all'utente
+    // prima di avviare la build (quando si clicca "Build with Parameters").
+    parameters {
+
+        // Definisce un parametro di tipo 'choice' (menu a tendina).
+        choice(name: 'ENVIRONMENT', 
+               choices: ['DEVELOPMENT', 'PRODUCTION'],
+               description: 'Scelta ambiente su cui eseguire la build')
+    }
+
+    stages {
+
+        stage('DEPLOY IN DEVELOPMENT') {
+
+            // Blocco 'when' per eseguire questo stage solo se
+            // l'utente ha scelto 'DEVELOPMENT' nel parametro.
+            when {
+                // Controlla se il parametro ENVIRONMENT è uguale a 'DEVELOPMENT'.
+                expression { params.ENVIRONMENT == 'DEVELOPMENT' }
+            }
+            steps {
+                // Stampa un messaggio nei log della build.
+                echo " Esecuzione stage DEVELOPMENT "
+                // Mostra quale ambiente è stato selezionato.
+                echo "Ambiente selezionato: ${params.ENVIRONMENT}"
+            }
+        }
+
+        stage('DEPLOY IN PRODUCTION') {
+
+            // Un'altra condizione 'when', questa volta per PROD.
+            when {
+                // Stesso controllo, ma per 'PRODUCTION'.
+                expression { params.ENVIRONMENT == 'PRODUCTION' }
+            }
+            steps {
+                echo " Esecuzione stage PRODUCTION "
+                echo "Ambiente selezionato: ${params.ENVIRONMENT}"
+        }
+    }
+    }
+}

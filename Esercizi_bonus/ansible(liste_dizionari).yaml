@@ -1,0 +1,29 @@
+- name: Esercizio Liste e Dizionari (Simulazione Veloce)
+  hosts: localhost
+  connection: local
+
+  vars:
+    lista_software:   # DIZIONARIO SEMPLICE (Elenco di coppie chiave-valore)
+      git: present    # Chiave: git,     Valore: present
+      vim: present    # Chiave: vim,     Valore: present
+      photoshop: absent # Chiave: photoshop, Valore: absent (rimuovilo)
+
+    lista_utenti:               # LISTA DI DIZIONARI (Elenco di utenti con proprietà multiple)
+      - nome: "mario_rossi"     # Proprietà 1 dell'utente 1
+        mansione: "developer"   # Proprietà 2 dell'utente 1
+      - nome: "luca_bianchi"    # Proprietà 1 dell'utente 2
+        mansione: "manager"     # Proprietà 2 dell'utente 2
+
+  tasks:
+    - name: Simulazione installazione pacchetti     # Primo esercizio, loop su dizionario
+      ansible.builtin.debug:                        # Uso debug per simulare l'installazione
+        msg: "Sto configurando il software {{ item.key }} affinché sia {{ item.value }}"    # Messaggio di debug
+      loop: "{{ lista_software | dict2items }}"
+      # Siccome ansible non sa ciclare direttamente sui dizionari,
+      # uso il filtro 'dict2items' per trasformarlo in una lista di oggetti
+
+    - name: Simulazione creazione utenti         # Secondo esercizio, loop su lista di dizionari
+      ansible.builtin.debug:
+        msg: "Creazione utente {{ item.nome }} con mansione {{ item.mansione }}"
+      loop: "{{ lista_utenti }}"
+      # Qui non servono filtri perché 'lista_utenti' è già una lista (inizia con i trattini -)

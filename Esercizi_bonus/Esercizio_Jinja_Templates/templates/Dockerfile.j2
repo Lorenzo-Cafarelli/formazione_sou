@@ -1,0 +1,19 @@
+# Dockerfile generato dinamicamente
+FROM {{ base_image }}:{{ image_version }}
+
+LABEL maintainer="DevOpsTribe"
+
+# Installazione pacchetti condizionale
+{% if install_debug_tools %}
+RUN apt-get update && apt-get install -y curl vim htop
+{% endif %}
+
+WORKDIR /app
+
+# Copia app
+COPY {{ app_name }} .
+
+# Esposizione porta dinamica
+EXPOSE {{ app_port }}
+
+CMD ["java", "-jar", "{{ app_name }}"]

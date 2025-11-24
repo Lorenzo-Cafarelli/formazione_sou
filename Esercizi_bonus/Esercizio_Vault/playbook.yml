@@ -1,0 +1,22 @@
+---
+# Esercizio di esempio per l'utilizzo di Ansible Vault
+
+- name: Esempio utilizzo Ansible Vault    # Titolo del playbook
+  hosts: localhost                        # Esecuzione in locale
+  connection: local                       # Connessione locale
+  gather_facts: no                        # Non raccogliere fatti di sistema
+
+  # Utilizzo di un file esterno cifrato con vault per caricare variabili sensibili
+  vars_files:
+    - secrets.yml
+
+
+  # Un esempio di task che utilizza le variabili caricate dal file cifrato
+  tasks:
+    - name: Stampa il valore della api_key
+      debug:
+        msg: "La chiave API segreta è: {{ api_key }}"
+
+    - name: Stampa il valore della db_password
+      debug:
+        var: db_password

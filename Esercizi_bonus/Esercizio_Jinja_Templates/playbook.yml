@@ -1,0 +1,71 @@
+- name: Esercizio Configurazione Sicurezza con Jinja
+  hosts: servers
+  become: yes  # Necessario per scrivere in /etc/
+  vars:
+    # Variabili di configurazione
+    env_type: "production"      # Potrei cambiare in 'development' per testare l'else
+    target_user: "mario"
+    allowed_users:
+      - "luigi"
+      - "marco"
+      - "carlo"
+    
+    # Percorsi dei file temporanei locali
+    temp_limits_file: "/tmp/ansible_limits_gen.txt"
+    temp_access_file: "/tmp/ansible_access_gen.txt"
+
+  tasks:
+   
+    # TASK 1: Gestione limits.conf (Append)
+    
+    - name: Generazione snippet limits locale
+      ansible.builtin.template:
+        src: templates/limits_conf.j2
+        dest: "{{ temp_limits_file }}"
+      delegate_to: localhost
+      become: no     # Non mi serve root per scrivere in /tmp 
+
+    - name: Inserimento blocco in /etc/security/limits.conf
+      ansible.builtin.blockinfile:
+        path: /tmp/limits_test.conf
+        block: "{{ lookup('ansible.builtin.file', temp_limits_file) }}"
+        marker: "# {mark} ANSIBLE MANAGED LIMITS BLOCK"
+        insertafter: EOF
+        create: yes
+
+    # TASK 2: Gestione access.conf (Insert Before)
+  
+    - name: Generazione snippet access locale
+      ansible.builtin.template:
+        src: templates/access_conf.j2
+        dest: "{{ temp_access_file }}"
+      delegate_to: localhost
+      become: no
+
+    - name: Inserimento whitelist in /etc/security/access.conf
+      ansible.builtin.blockinfile:
+        path: /tmp/access_test.conf
+        block: "{{ lookup('ansible.builtin.file', temp_access_file) }}"
+        marker: "# {mark} ANSIBLE WHITELIST BLOCK"
+        insertbefore: "^- : ALL : ALL"    # Inserisco prima della regola che impedisce l’accesso agli utenti non esplicitamente autorizzati 
+        create: yes
+
+    # Esercizio Opzionale - Ho scelto di generare un Dockerfile con Jinja
+
+- name: Esercizio Opzionale - Generazione Dockerfile
+  hosts: localhost
+  connection: local
+  
+  tasks:
+    - name: Genera Dockerfile per Java App
+      ansible.builtin.template:
+        src: templates/Dockerfile.j2
+        dest: ./Dockerfile
+      vars:
+        base_image: "openjdk"
+        image_version: "17-slim"
+        install_debug_tools: true  # Cambia a false per non installare gli strumenti di debug
+        app_name: "myapp-1.0.jar"
+        app_port: 8080
+  
+    # Nota: Cambiando le variabili sopra, puoi generare Dockerfile diversi in base alle tue esigenze.

@@ -15,15 +15,31 @@
         mansione: "manager"     # Proprietà 2 dell'utente 2
 
   tasks:
-    - name: Simulazione installazione pacchetti     # Primo esercizio, loop su dizionario
+    # Primo esercizio, loop su dizionario
+    - name: Simulazione installazione pacchetti
       ansible.builtin.debug:                        # Uso debug per simulare l'installazione
         msg: "Sto configurando il software {{ item.key }} affinché sia {{ item.value }}"    # Messaggio di debug
       loop: "{{ lista_software | dict2items }}"
       # Siccome ansible non sa ciclare direttamente sui dizionari,
       # uso il filtro 'dict2items' per trasformarlo in una lista di oggetti
 
-    - name: Simulazione creazione utenti         # Secondo esercizio, loop su lista di dizionari
+    - name: Gestione pacchetti con DNF
+      ansible.builtin.dnf:
+        name: "{{ item.key }}"    # Prende il nome del software (es. git)
+        state: "{{ item.value }}" # Prende lo stato (es. present/absent)
+      loop: "{{ lista_software | dict2items }}"
+
+    # Secondo esercizio, loop su lista di dizionari
+    - name: Simulazione creazione utenti         
       ansible.builtin.debug:
         msg: "Creazione utente {{ item.nome }} con mansione {{ item.mansione }}"
       loop: "{{ lista_utenti }}"
       # Qui non servono filtri perché 'lista_utenti' è già una lista (inizia con i trattini -)
+
+    - name: Creazione utenti di sistema
+      ansible.builtin.user:
+        name: "{{ item.nome }}"      # Parametro obbligatorio del modulo user
+        comment: "{{ item.mansione }}" # Usiamo la mansione come commento/descrizione
+        state: present
+        shell: /bin/bash
+      loop: "{{ lista_utenti }}"

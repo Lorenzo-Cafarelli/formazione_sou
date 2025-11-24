@@ -1,0 +1,4 @@
+# Whitelist utenti generata da Ansible
+{% for user in allowed_users %}
++ : {{ user }} : ALL
+{% endfor %}

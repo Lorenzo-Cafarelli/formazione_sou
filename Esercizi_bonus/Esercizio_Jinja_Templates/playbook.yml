@@ -50,7 +50,7 @@
         insertbefore: "^- : ALL : ALL"    # Inserisco prima della regola che impedisce l’accesso agli utenti non esplicitamente autorizzati 
         create: yes
 
-    # Esercizio Opzionale - Ho scelto di generare un Dockerfile con Jinja
+# Esercizio Opzionale - Ho scelto di generare un Dockerfile con Jinja
 
 - name: Esercizio Opzionale - Generazione Dockerfile
   hosts: localhost

@@ -1,0 +1,75 @@
+OBIETTIVI:
+
+- Lanciare un container all’interno di un host/vm Linux impostando una restrizione sulla memoria.
+- Lanciare il comando free all’interno del container e prendere nota della memoria attualmente occupata.
+- Impostare un memory.max inferiore alla memoria attualmente utilizzata fino  a triggerare l’uccisione del 
+  container da parte dell’OOM killer del kernel (Out Of Memory).
+
+
+1) Lancio questo comando per creare un container che consuma una quantità fissa di RAM.
+   Mi assicuro che non possa usare lo Swap, altrimenti sposta la memoria sul disco invece di uccidere il processo.
+
+docker run -d \
+  --name ese_bonus \    # Assegno il nome al container
+  --memory=200m \           # Imposta il limite iniziale a 200MB
+  --memory-swap=200m \      # Serve per disabilitare lo Swap
+  python:3.9-slim \
+  python -c "import time; x = 'a' * 1024 * 1024 * 100; print('Allocati 100MB'); time.sleep(3600)"      # Creo una variabile di 100MB e metto il processo in attesa
+
+  Output atteso:
+  ID del container
+
+
+
+2) Monitoro la memoria usata dal container tramite il comando Free.
+
+    2.1) Diciamo a docker di entrare come root e installare procps per installare Free
+
+         docker exec -u 0 -it ese_bonus sh -c "apt-get update && apt-get install -y procps"
+
+         Output atteso: 
+         Installazione pacchetti
+
+    2.2) Con questo comando entriamo nel container e possiamo controllare la memoria
+
+         docker exec -it ese_bonus free -h
+
+         Output atteso: 
+         Memoria occupata
+
+    2.3) Prendo il percorso per poi impostare limite memoria
+
+         sudo find /sys/fs/cgroup -type d -name "ID del container"
+
+         Output atteso:
+         Percorso CGroup del container
+
+3) Accedo ai Cgroups e modifico il limite con memory.max
+
+    3.1) Imposto il limite di memoria inferiore a quella corrente
+        
+         echo <nuovo_limite_in_byte> | sudo tee /sys/fs/cgroup/system.slice/docker-<ID del container>.scope/memory.max
+
+         Output atteso:
+         Booleano di risposta (0,1)
+
+    3.2) Controllo il risultato
+
+         docker ps -a
+
+         Output atteso:
+         Lista container con status, deve essere Exit(137)
+
+
+Domande
+
+- L’uccisione da parte dell’OOM killer del container è istantanea oppure no ? Cercare di dare una spiegazione al comportamento osservato.
+
+  Se abbiamo applicato correttamente i comandi precedenti, il container si crea e istantaneamente deve dare status Exit(137).
+  Perchè viene allocata direttamente più memoria di quella consentita dal memory.max.
+
+- Una volta impostato un memory.max inferiore alla memoria attualmente utilizzata cosa si rileva all’interno del container ? 
+  La memoria viene deallocata o non c’è alcun effetto ? Anche in questo caso si invita a dare una spiegazione logica dei fenomeni osservati.
+
+  Dipende se abbiamo abilitato lo Swap, nel caso in cui lo Swap è disabilitato, non c'è deallocazione ma avviene una terminazione immediata (OOM Kill).
+  Se lo Swap è abilitato, la memoria fisica (RAM) viene deallocata, ma il contenuto viene spostasto nella memoria virtuale su disco (Swap),  mantenendo il processo vivo.

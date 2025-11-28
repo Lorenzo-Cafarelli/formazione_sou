@@ -1,0 +1,151 @@
+VagrantFile per la creazione delle due VM, una client e una server.
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64" # Sistema base: Ubuntu 22.04
+
+  # --- CONFIGURAZIONE SERVER NFS ---
+  config.vm.define "nfs-server" do |server|
+    server.vm.hostname = "nfs-server"
+    server.vm.network "private_network", ip: "192.168.56.10"
+    
+    # Script che rende la macchina un server NFS
+    server.vm.provision "shell", inline: <<-SHELL
+      apt-get update
+      apt-get install -y nfs-kernel-server
+      # Crea la cartella da condividere
+      mkdir -p /srv/nfs/share
+      # Assegna permessi permissivi (per evitare problemi in lab)
+      chown nobody:nogroup /srv/nfs/share
+      chmod 777 /srv/nfs/share
+      # Configura l'export NFS per accettare connessioni dalla subnet
+      echo "/srv/nfs/share 192.168.56.0/24(rw,sync,no_subtree_check)" >> /etc/exports
+      # Attiva la condivisione
+      exportfs -a
+      systemctl restart nfs-kernel-server
+    SHELL
+  end
+
+  # --- CONFIGURAZIONE CLIENT DOCKER ---
+  config.vm.define "docker-client" do |client|
+    client.vm.hostname = "docker-client"
+    client.vm.network "private_network", ip: "192.168.56.20"
+    
+    # Script che installa Docker, NFS client e Docker Compose
+    client.vm.provision "shell", inline: <<-SHELL
+      apt-get update
+      # docker.io = Motore Docker
+      # nfs-common = Driver necessari all'OS per montare NFS
+      # docker-compose = Tool per il punto bonus
+      apt-get install -y docker.io nfs-common docker-compose
+      
+      # Aggiunge l'utente vagrant al gruppo docker per non usare sempre sudo
+      usermod -aG docker vagrant
+    SHELL
+  end
+end
+
+--------------------------------------------------------------------------
+
+OBIETTIVI
+
+Esportare una share NFS da una VM e montarla su un container in un'altra VM sulla stessa subnet.
+Effettuare questa operazione nelle tre seguenti modalità:
+
+1) Bind Mount:
+   Il sistema operativo della VM monta la cartella di rete, poi Docker la monta dentro al container.
+
+   # Creiamo il punto di mount locale
+   sudo mkdir -p /mnt/cartella_nfs      
+
+   # Montiamo la risorsa di rete del server
+   sudo mount -t nfs 192.168.56.10:/srv/nfs/share /mnt/cartella_nfs
+
+   # Avviamo il container 
+   docker run --rm -v /mnt/cartella_nfs:/data alpine cat /data/messaggio.txt
+
+   Output atteso: 
+   "File creato sul Server NFS"
+
+--------------------------------------------------------------------------
+
+2) Volume
+   Istruiamo docker a gestire la connessione NFS creando l'oggetto "Volume".
+   
+   # Creiamo il volume
+   docker volume create --driver local \
+     --opt type=nfs \
+     --opt o=addr=192.168.56.10,rw \
+     --opt device=:/srv/nfs/share \
+     volume_nfs_creato_a_mano
+
+   # Avviamo il container
+   docker run --rm -v volume_nfs_creato_a_mano:/data alpine cat /data/messaggio.txt
+
+   Output atteso: 
+   "File creato sul Server NFS"
+
+--------------------------------------------------------------------------
+
+BONUS: Eseguire il punto 2 anche tramite Docker Compose.
+
+Automatizziamo il metodo 2, invece che scrivere i comandi da termianle definiamo l'infrastruttura in un file YAML:
+# File YAML
+version: '3.8'
+
+services:
+  mio-servizio:
+    image: alpine
+    # Comando per tenere vivo il container così possiamo entrarci
+    command: tail -f /dev/null
+    volumes:
+      - dati_nfs:/data
+volumes:
+  dati_nfs:
+    driver: local
+    driver_opts:
+      type: "nfs"
+      o: "addr=192.168.56.10,rw"
+      device: ":/srv/nfs/share"
+
+Dopo aver installato docker-compose, eseguire questo comando per avviare in background:
+
+   sudo docker-compose up -d
+
+Eseguiamo 'cat' dentro il container creato dal compose
+
+   sudo docker-compose exec mio-servizio cat /data/messaggio.txt
+
+   Output atteso: 
+   "File creato sul Server NFS"
+
+--------------------------------------------------------------------------
+
+3) Mount diretto da dentro il container
+
+Il container deve avere i driver NFS al suo interno, ed essere eseguito con i privilegi speciali per poter manipolare i mount point.
+
+# --privileged è obbligatorio per permettere il comando 'mount'
+   docker run --rm -it --privileged ubuntu bash
+
+1. Installiamo i driver NFS
+   apt-get update && apt-get install -y nfs-common
+
+2. Creiamo la cartella e montiamo
+   mkdir /data
+   mount -t nfs 192.168.56.10:/srv/nfs/share /data
+
+# 3. Verifica
+   cat /data/messaggio.txt
+
+   Output atteso: 
+   "File creato sul Server NFS"
+
+--------------------------------------------------------------------------
+
+Cosa è necessario fare per il punto 3?
+
+Per eseguire il punto 3 è necessario eseguire il mount diretto dall'interno del container ed è necessario fare:
+Usare il flag --privileged, per non far bloccare il comando mount.
+Installare il Client NFS nel container, perchè le immagini standard non hanno i driver installati.
+
+Di solito non è consigliata questa pratica, perchè il container diventa pesante ed è esposto a molti rischi di sicurezza.

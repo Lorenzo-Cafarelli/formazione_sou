@@ -1,0 +1,50 @@
+NAMESPACES
+
+
+Obiettivo:
+Riuscire a lanciare un processo con lo stesso namespace di un container e visualizzare tale processo con una ps dentro al container.
+Avvertenza: eseguire tutto l'esercizio all'interno di una VM Linux e non con un container sotto MacOS o altri Unix-Like.
+
+Tip (1): utilizzare il comando nsenter per lanciare il comando. Sulla manpage ci sono tutte le informazioni per "agganciare" il nuovo processo agli stessi stesso namespaces di un processo esistente (attenzione, occorre agganciare "tutti" i namespace del processo target).
+Tip (2): utilizzare la docker/podman inspect per sapere il pid del processo da associare al container.
+
+
+
+1. Abbiamo lanciato il container in background utilizzando alpine, dando uno sleep di un'ora
+	docker run -d --rm --name ese_bonus alpine sleep 3600
+
+2. Poi abbiamo trovato il PID del processo principale sull'Host:
+
+	TARGET_PID=$(docker inspect -f '{{.State.Pid}}' ese_bonus)
+
+	vagrant@ubuntu-jammy:~$ TARGET_PID=$(docker inspect -f '{{.State.Pid}}' ese_bonus)
+	vagrant@ubuntu-jammy:~$ echo "Il PID del processo containerizzato è: $TARGET_PID"
+	Il PID del processo containerizzato è: 1667
+	vagrant@ubuntu-jammy:~$ sudo nsenter -t $TARGET_PID -m -u -i -n -p sleep 500 &
+	[1] 1701
+
+	vagrant@ubuntu-jammy:~$ docker ps -a
+	CONTAINER ID   IMAGE             COMMAND                  CREATED              STATUS                     PORTS     NAMES
+	95e90601658f   alpine            "sleep 3600"             About a minute ago   Up About a minute                    ese_bonus
+
+
+	
+3. Visualizziamo i processi visti "dagli occhi" del container:
+	vagrant@ubuntu-jammy:~$ docker exec ese_bonus ps aux
+	PID   USER     TIME  COMMAND
+    	1 root      0:00 sleep 3600
+    	7 root      0:00 sleep 500
+    	8 root      0:00 ps aux
+
+
+4. Domande:
+
+"Il PID del processo lanciato è uguale o diverso tra dentro e fuori il container ?"
+	E' diverso. Il processo è lo stesso ma ha due pid diversi tra host e container.
+
+"Cosa succede se si prova a stoppare il container mentre il processo creato è ancora attivo?"
+	Il processo muore subito, perché non può sopravvivere senza il namespace che lo ospita.
+
+"Cosa succede se si prova a killare il processo da dentro il container?"
+	Il processo termina anche sull'host, poiché lavoriamo direttamente nell'unica istanza gestita dal kernel.
+

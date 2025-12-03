@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nfs-inline-lab
+spec:
+  containers:
+  - name: alpine
+    image: alpine
+    command: ["/bin/sh", "-c", "while true; do date >> /mnt/nfs/test-inline.txt; sleep 5; done"]
+    volumeMounts:
+    - name: nfs-vol
+      mountPath: /mnt/nfs
+  volumes:
+  - name: nfs-vol
+    nfs:
+      server: 10.103.185.67 
+      path: /

@@ -1,0 +1,48 @@
+# 1. L'Amministratore definisce la Risorsa Fisica (PV)
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs-pv-lab
+spec:
+  capacity:
+    storage: 100Mi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany  # Fondamentale per NFS: permette a più pod di leggere/scrivere
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: manual-nfs # Un'etichetta per collegarlo alla PVC
+  nfs:
+    server: 10.103.185.67  # IP del servizio NFS creato nell'esercizio precedente  
+    path: /                
+---
+# 2. Lo Sviluppatore crea la Richiesta (PVC)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nfs-pvc-lab
+spec:
+  storageClassName: manual-nfs # Deve combaciare con quella del PV
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 100Mi
+---
+# 3. Il Pod usa la Richiesta come se fosse un disco locale
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nfs-pvc-pod
+spec:
+  containers:
+  - name: alpine
+    image: alpine
+    # Questo comando legge in continuo le ultime righe del file
+    command: ["/bin/sh", "-c", "tail -f /mnt/nfs/test-inline.txt"]
+    volumeMounts:
+    - name: storage-vol
+      mountPath: /mnt/nfs
+  volumes:
+  - name: storage-vol
+    persistentVolumeClaim:
+      claimName: nfs-pvc-lab # Si aggancia alla PVC definita sopra

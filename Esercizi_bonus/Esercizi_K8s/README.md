@@ -104,7 +104,9 @@ kubectl exec nfs-inline-lab -- cat /mnt/nfs/test-inline.txt
 
 Approccio "Enterprise". Disaccoppia la definizione dallo storage.
 
-***File:*** 02-pv-pvc-pod.yaml
+***File:*** 
+
+02-pv-pvc-pod.yaml
 
 Fasi:
 1. PersistentVolume (PV): Definizione risorsa fisica (IP + Path /).
@@ -112,20 +114,23 @@ Fasi:
 3. Pod: Usa la PVC come volume.
 
 ***Comando:***
+
 (Modificare il PV inserendo il CLUSTER-IP corretto)
 ```bash
 kubectl apply -f 02-pv-pvc-pod.yaml
 ```
 
 ***VERIFICA FINALE***
+
 Controlliamo che il secondo Pod legga i dati del primo.
 
 ***Comando:***
+
 kubectl logs -f nfs-pvc-pod
 
-***Output atteso:***
-Wed Dec  3 14:35:00 UTC 2025
-Wed Dec  3 14:35:05 UTC 2025
+***Output atteso:***\
+Wed Dec  3 14:35:00 UTC 2025\
+Wed Dec  3 14:35:05 UTC 2025\
 ...
 
 ---

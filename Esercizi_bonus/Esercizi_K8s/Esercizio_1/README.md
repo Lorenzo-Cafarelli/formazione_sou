@@ -1,18 +1,11 @@
-# LABORATORIO STORAGE KUBERNETES: NFS (Inline vs PV/PVC)
+# ESERCIZIO 1
 
-## DESCRIZIONE DEL PROGETTO
-------------------------
-Questo laboratorio dimostra come configurare e utilizzare uno storage 
-condiviso NFS (Network File System) all'interno di un cluster 
-Kubernetes (Minikube).
+## OBIETTIVO
+---
 
-L'obiettivo è testare due diverse modalità di montaggio dei volumi:
-
-1. Volume Inline: Definizione diretta del server NFS all'interno 
-   del manifesto del Pod (stretto accoppiamento).
-
-2. PV & PVC: Astrazione tramite PersistentVolume e 
-   PersistentVolumeClaim (best practice per il disaccoppiamento).
+Montare una share NFS dentro un Pod Kubernetes nelle 2 seguenti modalità:
+* Volume definito all'interno del Pod
+* Persistent Volume Claim richiamato all'interno del Pod
 
 Inoltre, il laboratorio include la configurazione di un Server NFS 
 temporaneo direttamente all'interno del cluster per simulare 

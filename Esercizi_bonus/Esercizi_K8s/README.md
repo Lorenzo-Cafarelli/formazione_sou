@@ -49,9 +49,10 @@ Il sistema è composto da 3 componenti principali:
 
 Creiamo un server NFS "finto" che gira come Pod nel cluster.
 
-***File:*** 00-nfs-server.yaml
+***File:***\
+00-nfs-server.yaml
 
-Nota Tecnica: Utilizziamo un volume 'emptyDir' montato su '/share' 
+> **Nota Tecnica:** Utilizziamo un volume 'emptyDir' montato su '/share' 
 per garantire che la cartella esista prima dell'avvio del demone 
 NFS, prevenendo crash all'avvio.
 
@@ -64,7 +65,7 @@ RECUPERO DELL'IP DEL SERVER
 
 Una volta avviato, recuperare l'indirizzo IP interno del servizio:
 
-***Comando:***
+***Comando:***\
 kubectl get svc nfs-service
 
 (Annotare il CLUSTER-IP, es. 10.110.46.106)
@@ -76,9 +77,10 @@ kubectl get svc nfs-service
 Approccio "diretto". Utile per test rapidi, sconsigliato in 
 produzione perché l'IP è hardcoded.
 
-***File:*** 01-pod-inline.yaml
+***File:***\
+01-pod-inline.yaml
 
-FIX IMPORTANTE (NFSv4 Root Mapping):
+***FIX IMPORTANTE (NFSv4 Root Mapping):***\
 Il server NFSv4 è configurato con fsid=0. Questo trasforma la 
 cartella fisica '/share' nella root virtuale.
 - Errato: path: /share (Il client cerca /share nella root virtuale)
@@ -97,15 +99,12 @@ kubectl exec nfs-inline-lab -- cat /mnt/nfs/test-inline.txt
 (Output atteso: una lista di date che si aggiorna)
 
 ---
-
 ## STEP 3: CONFIGURAZIONE CLIENT 2 - PV e PVC
-
 ---
 
 Approccio "Enterprise". Disaccoppia la definizione dallo storage.
 
-***File:*** 
-
+***File:***\
 02-pv-pvc-pod.yaml
 
 Fasi:
@@ -120,12 +119,10 @@ Fasi:
 kubectl apply -f 02-pv-pvc-pod.yaml
 ```
 
-***VERIFICA FINALE***
-
+***VERIFICA FINALE***\
 Controlliamo che il secondo Pod legga i dati del primo.
 
-***Comando:***
-
+***Comando:***\
 kubectl logs -f nfs-pvc-pod
 
 ***Output atteso:***\
@@ -138,7 +135,6 @@ Wed Dec  3 14:35:05 UTC 2025\
 ---
 
 ***Rimuovere tutte le risorse:***
-
 kubectl delete -f 02-pv-pvc-pod.yaml\
 kubectl delete -f 01-pod-inline.yaml\
 kubectl delete -f 00-nfs-server.yaml

@@ -70,9 +70,7 @@ kubectl get svc nfs-service
 (Annotare il CLUSTER-IP, es. 10.110.46.106)
 
 ---
-
 ## STEP 2: CONFIGURAZIONE CLIENT 1 - VOLUME INLINE
-
 ---
 
 Approccio "diretto". Utile per test rapidi, sconsigliato in 
@@ -100,7 +98,7 @@ kubectl exec nfs-inline-lab -- cat /mnt/nfs/test-inline.txt
 
 ---
 
-STEP 3: CONFIGURAZIONE CLIENT 2 - PV e PVC
+## STEP 3: CONFIGURAZIONE CLIENT 2 - PV e PVC
 
 ---
 
@@ -131,11 +129,11 @@ Wed Dec  3 14:35:05 UTC 2025
 ...
 
 ---
-PULIZIA (CLEANUP)
+## PULIZIA (CLEANUP)
 ---
 
 ***Rimuovere tutte le risorse:***
 
-kubectl delete -f 02-pv-pvc-pod.yaml
-kubectl delete -f 01-pod-inline.yaml
+kubectl delete -f 02-pv-pvc-pod.yaml\
+kubectl delete -f 01-pod-inline.yaml\
 kubectl delete -f 00-nfs-server.yaml

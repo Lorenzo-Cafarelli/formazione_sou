@@ -59,3 +59,24 @@ chmod +x *.sh
 - Se Docker non è in esecuzione riceverai errori di connessione: avvia Docker Desktop o il demone Docker prima di eseguire gli script.
 - Se gli script falliscono per permessi, prova a eseguirli con `sudo` o aggiungi il tuo utente al gruppo `docker` (su macOS normalmente non necessario con Docker Desktop).
 - I container rappresentano lo stato del gioco: per resettare tutto usa `./stop_game.sh` e poi `./start_game.sh`.
+
+## Sezione "brute-force" (soluzione esaustiva)
+
+Nel progetto è presente una soluzione di tipo "brute-force" nella cartella `brute-force/`.
+Lo script principale è `brute-force/solve.sh` e implementa una ricerca esaustiva delle
+possibili sequenze di mosse per risolvere il rompicapo. È un'alternativa non-interattiva
+allo script di gioco: serve per trovare e/o verificare automaticamente soluzioni.
+
+Come usare lo script brute-force:
+
+```bash
+cd brute-force
+chmod +x solve.sh
+./solve.sh
+```
+
+Per poter bloccare l'esecuzione bisogna premere "CTRL+C", verrà bloccata l'esecuzione e avverrà la pulizia dei container.
+
+Note:
+- Lo script è generalmente non-interattivo e può generare molte combinazioni, su macchine con risorse limitate potrebbe essere lento.
+- Lo script opera a livello logico/shell e non modifica i container creati dagli script, nella cartella `scripts/` (se non diversamente specificato nello script stesso).

@@ -1,0 +1,31 @@
+services:
+  riva-sx:
+    image: alpine
+    container_name: riva-sx
+    working_dir: /game
+    volumes:
+      - ./:/game
+    command: tail -f /dev/null
+    networks:
+      - fiume
+
+  riva-dx:
+    image: alpine
+    container_name: riva-dx
+    working_dir: /game
+    volumes:
+      - ./:/game
+    command: tail -f /dev/null
+    networks:
+      - fiume
+
+  arbitro:
+    image: alpine
+    container_name: arbitro
+    command: /bin/sh -c "while true; do nc -l -u -p 9999; done"
+    networks:
+      - fiume
+
+networks:
+  fiume:
+    driver: bridge

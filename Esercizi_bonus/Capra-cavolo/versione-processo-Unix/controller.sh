@@ -8,29 +8,34 @@ POS_CONTADINO=0
 
 # Funzioni di supporto
 spawn() {
-    # Tenta di avviare il processo
-    docker compose exec -d riva-$2 sh /game/actor.sh $1 > /dev/null 2>&1
+    ROLE=$1
+    SIDE=$2
     
-    # ATTESA ATTIVA: Aspetta finché il processo non appare davvero nella lista ps
-    # Timeout di 5 secondi per evitare loop infiniti
+    # Esegue lo script. Nota: Usiamo bash esplicitamente
+    docker compose exec -d riva-$SIDE bash /game/actor.sh $ROLE > /dev/null 2>&1
+    
+    # ATTESA ATTIVA
     count=0
-    while ! docker compose exec riva-$2 ps | grep -q "sh /game/actor.sh $1"; do
-        sleep 1
+    # Aumentiamo un po' il timeout (30 iterazioni)
+    while ! docker compose exec riva-$SIDE ps | grep -q "bash /game/actor.sh $ROLE"; do
+        sleep 0.2 # Controllo più rapido
         count=$((count+1))
-        if [ $count -gt 25 ]; then return 1; fi # Fallito avvio
+        if [ $count -gt 30 ]; then return 1; fi 
     done
     return 0
 }
 
 kill_actor() {
-    docker compose exec riva-$2 pkill -f "sh /game/actor.sh $1" > /dev/null 2>&1
+    ROLE=$1
+    SIDE=$2
+    # Pkill -f matcha la command line completa
+    docker compose exec riva-$SIDE pkill -f "bash /game/actor.sh $ROLE" > /dev/null 2>&1
     
-    # ATTESA ATTIVA: Aspetta finché il processo non sparisce davvero
     count=0
-    while docker compose exec riva-$2 ps | grep -q "sh /game/actor.sh $1"; do
-        sleep 1
+    while docker compose exec riva-$SIDE ps | grep -q "bash /game/actor.sh $ROLE"; do
+        sleep 0.2
         count=$((count+1))
-        if [ $count -gt 25 ]; then break; fi # Forziamo uscita
+        if [ $count -gt 30 ]; then break; fi
     done
 }
 
@@ -39,9 +44,8 @@ check_life() {
     POS=$2
     if [ $POS -eq 0 ]; then SIDE="sx"; else SIDE="dx"; fi
     
-    # Verifica esistenza processo
-    if ! docker compose exec riva-$SIDE ps | grep -q "sh /game/actor.sh $ROLE"; then
-        return 1 # MORTO (o crashato)
+    if ! docker compose exec riva-$SIDE ps | grep -q "bash /game/actor.sh $ROLE"; then
+        return 1 # MORTO
     fi
     return 0 # VIVO
 }
@@ -49,7 +53,7 @@ check_life() {
 draw_ui() {
     clear
     echo "=========================================="
-    echo "   🛶 IL GIOCO DEL FIUME (Sync Edition)    "
+    echo "   🛶 IL GIOCO DEL FIUME (Fixed Edition)   "
     echo "=========================================="
     echo ""
     echo -n "RIVA SX: "
@@ -71,10 +75,14 @@ draw_ui() {
 }
 
 # --- RESET INIZIALE ---
-echo "🧹 Pulizia profonda (Rimozione volumi e log)..."
-# --volumes cancella anche i log persistenti!
+echo "🧹 Pulizia e installazione pacchetti..."
 docker compose down --volumes > /dev/null 2>&1
-docker compose up -d > /dev/null 2>&1
+# Qui assicuriamo che le immagini vengano buildate o avviate correttamente
+docker compose up -d
+
+# Attendiamo che Alpine installi i pacchetti (comando nel docker-compose)
+echo "⏳ Attendo installazione netcat..."
+sleep 5 
 
 echo "🔄 Avvio processi..."
 spawn lupo sx
@@ -96,18 +104,23 @@ while true; do
         *) continue ;;
     esac
 
+    # Validazione mossa
     if [ "$ACTOR" != "nessuno" ] && [ $ACTOR_POS -ne $POS_CONTADINO ]; then
-        echo -e "\n🚫 Errore: Il contadino non è lì!"
+        echo -e "\n🚫 Errore: Il contadino deve essere sulla stessa riva!"
         sleep 1
         continue
     fi
 
     if [ $POS_CONTADINO -eq 0 ]; then FROM="sx"; TO="dx"; NEW_POS=1; else FROM="dx"; TO="sx"; NEW_POS=0; fi
 
-    echo -e "\n🛶 Sposto..."
+  echo -e "\n🛶 Sposto..."
     
     # 1. RIMUOVI (Kill sincrono)
-    if [ "$ACTOR" != "nessuno" ]; then kill_actor $ACTOR $FROM; fi
+    if [ "$ACTOR" != "nessuno" ]; then 
+        kill_actor $ACTOR $FROM
+        sleep 2
+        # --------------------
+    fi
     kill_actor contadino $FROM
     
     # Simulazione viaggio
@@ -119,8 +132,8 @@ while true; do
         if spawn $ACTOR $TO; then
              eval "$VAR_REF=$NEW_POS"
         else
-             echo "❌ ERRORE TECNICO: Impossibile avviare $ACTOR su $TO (Porta occupata?)"
-             echo "Il gioco termina per errore di sistema Docker."
+             echo "❌ ERRORE TECNICO: Impossibile avviare $ACTOR su $TO"
+             echo "Assicurati di aver aggiornato docker-compose e actor.sh"
              exit 1
         fi
     fi
@@ -138,19 +151,31 @@ while true; do
         draw_ui
         echo -e "\n\n💀 GAME OVER! QUALCUNO È MORTO! 💀"
         
-        # Recupera l'ultimo log
         LOG_MSG=$(docker compose logs --tail 1 arbitro 2>&1)
         
-        # Se il log è vuoto o contiene solo info di avvio, non è stato un omicidio
         if [[ "$LOG_MSG" == *"GAME OVER"* ]]; then
              echo "Causa: $LOG_MSG"
         else
-             echo "⚠️ ATTENZIONE: Nessun messaggio dall'arbitro."
-             echo "È probabile che un processo sia crashato silenziosamente (Errore Tecnico)."
+             echo "⚠️ Morte silenziosa (possibile mossa illegale mentre il contadino viaggiava)."
         fi
         
         echo "Premi un tasto per uscire..."
         read -n 1 -s
         exit 1
     fi
+
+    # --- CONTROLLO VITTORIA ---
+    # Se tutti sono sulla riva destra (valore 1)
+    if [ $POS_LUPO -eq 1 ] && [ $POS_CAPRA -eq 1 ] && [ $POS_CAVOLO -eq 1 ] && [ $POS_CONTADINO -eq 1 ]; then
+        draw_ui
+        echo -e "\n\n🏆  COMPLIMENTI! HAI VINTO!  🏆"
+        echo "Tutti sono stati traghettati sani e salvi!"
+        
+        # Pulizia finale automatica
+        echo "Premi un tasto per festeggiare e uscire..."
+        read -n 1 -s
+        docker compose down --volumes > /dev/null 2>&1
+        exit 0
+    fi
+
 done
